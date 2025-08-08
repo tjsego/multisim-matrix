@@ -1,9 +1,18 @@
 from process_bigraph import ProcessTypes, Process, Composite, default
 from process_bigraph.emitter import emitter_from_wires, gather_emitter_results
 
+from multisim_matrix.vivarium import register_processes, register_types
+
+# concentration = {
+#     '_inherit': 'float',
+#     '_divide': 'divide_any',
+#     '_description': 'concentrations',
+# }
+
 
 class GrowDivide(Process):
-    """"""
+    """
+    """
 
     config_schema = {
         'threshold': 'float',
@@ -23,7 +32,7 @@ class GrowDivide(Process):
 
     def inputs(self):
         return {
-            'activator': 'float',  # this determines growth rate (notch)
+            'activator': 'concentration',  # this determines growth rate (notch)
             'trigger': 'float'     # This triggers division when passed a threshold
         }
 
@@ -41,7 +50,7 @@ class GrowDivide(Process):
         trigger_level = state['trigger']
 
         divide = {}
-        if trigger_level <= self.config['threshold']:
+        if trigger_level >= self.config['threshold']:
             # trigger division of self
             mother = self.config['cell_id']
             daughters = [(
@@ -62,16 +71,18 @@ class GrowDivide(Process):
             'environment': divide
         }
 
+import pprint
+
 
 def run_process(core):
 
     cell_schema = {
-        'mass': 'float',
-        'notch': 'float',
+        'mass': 'cell_mass',
+        'notch': 'concentration',
     }
 
     config = {
-        'threshold': 2.0,  # this is the mass threshold for division
+        'threshold': 2.0,   # this is the mass threshold for division
         'growth_rate': 0.1,
         'cell_id': '0',
         'cell_schema': cell_schema,
@@ -80,7 +91,7 @@ def run_process(core):
     cell_id = '0'
     cell_state = {
         'mass': 1.0,
-        'notch': 0.0,
+        'notch': 1.0,  # 1.0 concentration to trigger division
         'grow': {
             '_type': 'process',
             'address': 'local:gd_process',
@@ -112,16 +123,18 @@ def run_process(core):
         'state': environment_state,
     }, core=core)
 
-    duration = 2.0
+    duration = 20.0
     composite.run(duration)
 
     results = gather_emitter_results(composite)[('emitter',)]
 
-    print(results)
+    print(f'RESULTS: {pprint.pformat(results)}')
 
 
 if __name__ == '__main__':
     core = ProcessTypes()
+    register_types(core)
+    register_processes(core)
     core.register_process(
         'gd_process',
         GrowDivide)

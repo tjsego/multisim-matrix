@@ -1,43 +1,56 @@
 [
   [
+    "concentration",
+    {
+      "_inherit": "float",
+      "_divide": "divide_any"
+    }
+  ],
+  [
+    "cell_mass",
+    {
+      "_inherit": "float"
+    }
+  ],
+  [
     "delta",
     {
-      "_type": "float",
+      "_inherit": "concentration",
       "_apply": "set"
     }
   ],
   [
     "notch",
     {
-      "_type": "float",
+      "_inherit": "concentration",
       "_apply": "set"
     }
   ],
   [
     "delta_neighbors",
     {
-      "_type": "float",
+      "_inherit": "float",
       "_apply": "set"
     }
   ],
   [
     "volume",
     {
-      "_type": "float",
+      "_inherit": "float",
       "_apply": "set"
     }
   ],
   [
     "volume_constraint",
     {
-      "_type": "float",
+      "_inherit": "float",
       "_apply": "set"
     }
   ],
   [
     "surface_area",
     {
-      "_type": "float",
+      "_inherit": "float",
       "_apply": "set"
     }
   ],
@@ -67,6 +80,6 @@
   ],
   [
     "cell_spatial_data",
-    "any"
+      "any"
   ]
 ]

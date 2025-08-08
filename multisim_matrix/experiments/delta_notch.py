@@ -168,7 +168,8 @@ def run_composites(core):
                                 'delta': ['delta'],  # this has to be called delta store for the connector to read it
                                 'notch': ['notch']
                             })
-                        }
+                        },
+                        'grow_divide_process': {}  # TODO -- grow divide process goes here.
                     },
 
                 }
