@@ -21,7 +21,8 @@ class GrowDivide(Process):
         'cell_schema': 'schema',
         'divisions': {
             '_type': 'integer',
-            '_default': 2}
+            '_default': 2
+        }
     }
 
     # def initialize(self, config):
@@ -38,7 +39,7 @@ class GrowDivide(Process):
 
     def outputs(self):
         return {
-            'mass': 'float',             # this is the mass of the cell
+            'target': 'float',             # this is the mass of the cell
             'environment': {
                 '_type': 'map',
                 '_value': self.config['cell_schema']},  # we need somewhere to divide into
@@ -64,10 +65,10 @@ class GrowDivide(Process):
                         'daughters': daughters}}}
 
         # grow
-        new_mass = self.config['growth_rate'] * activator_level * interval
+        updated_target = self.config['growth_rate'] * activator_level * interval
 
         return {
-            'mass': new_mass,
+            'target': updated_target,
             'environment': divide
         }
 
@@ -101,10 +102,11 @@ def run_process(core):
                 'trigger': ['mass']
             },
             'outputs': {
-                'mass': ['mass'],
+                'target': ['mass'],
                 'environment': ['..',]  # point IN the environment to the map of cells
             },
-            'interval': 1.0},
+            'interval': 1.0
+        },
     }
 
     environment_state = {

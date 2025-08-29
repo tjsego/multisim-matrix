@@ -43,7 +43,7 @@ def run_composites(core):
     assert step_size >= dt, 'The time step of the process bigraph engine must be greater than or equal to the time step of tissue forge'
 
     multicellular_startup_settings = {
-        'local:PottsPlanarProcess': {},
+        # 'local:PottsPlanarProcess': {},
         'local:CenterPlanarProcess': {
             'step_size': step_size,
             'dt': dt,
@@ -81,6 +81,10 @@ def run_composites(core):
         'cell_radius': cell_radius
     }
     subcellular_config = {}
+    grow_divide_config = {
+        'threshold': 10.0,   # this is the volume threshold for division
+        'growth_rate': 0.1,
+    }
 
     fig_root_dir = '../_figs'
     print(os.path.abspath(fig_root_dir))
@@ -169,7 +173,26 @@ def run_composites(core):
                                 'notch': ['notch']
                             })
                         },
-                        'grow_divide_process': {}  # TODO -- grow divide process goes here.
+                        'grow_divide_process': {
+                            '_type': 'process',
+                            'address': 'local:gd_process',
+                            'config': {**grow_divide_config,
+                                       **{'cell_id': 1,
+                                          'cell_schema': {
+                                              'volume': 'cell_volume',
+                                              'notch': 'concentration',
+                                          }}
+                                       },
+                            'inputs': {
+                                'activator': ['notch'],
+                                'trigger': ['volume']
+                            },
+                            'outputs': {
+                                'target': ['volume'],
+                                'environment': ['..', ]  # point IN the environment to the map of cells
+                            },
+                            'interval': 1.0
+                        },
                     },
 
                 }

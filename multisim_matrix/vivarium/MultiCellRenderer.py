@@ -145,13 +145,13 @@ class MCCenterRenderer2D(_MCRenderer2D):
 
     def render_state(self, cell_data, states) -> plt.Figure:
         pos_x, pos_y, cell_ids, dim_x, dim_y, radius = cell_data
-        cell_c = [[min(1.0, states[i]) / 2 + 0.5, 0.5, 0.5] for i in cell_ids]
+        cell_c = [[min(1.0, max(0, states[i])) / 2 + 0.5, 0.5, 0.5] for i in cell_ids]
 
         return self._render_cells(pos_x, pos_y, dim_x, dim_y, radius, cell_c)
 
     def render_2state(self, cell_data, states1, states2) -> plt.Figure:
         pos_x, pos_y, cell_ids, dim_x, dim_y, radius = cell_data
-        cell_c = [[min(1.0, states1[i]) / 2 + 0.5, min(1.0, states2[i]) / 2 + 0.5, 0.5] for i in cell_ids]
+        cell_c = [[min(1.0, max(0, states1[i])) / 2 + 0.5, min(1.0, max(0, states2[i])) / 2 + 0.5, 0.5] for i in cell_ids]
 
         return self._render_cells(pos_x, pos_y, dim_x, dim_y, radius, cell_c)
 
