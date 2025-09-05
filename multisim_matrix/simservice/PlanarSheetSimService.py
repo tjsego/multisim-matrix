@@ -62,5 +62,8 @@ class PlanarSheetSimService(PySimService, abc.ABC):
     def set_cell_volume_targets(self, _targets: Dict[int, float]) -> None:
         raise NotImplementedError
 
-    def divide_cells(self, _ids: List[int]) -> Dict[int, int]:
+    def divide_cells(self, _ids: Dict[int,Tuple[int,int]]) -> Dict[int, int]:
+        """
+        input from mother: (daughter1_id, daughter2_id)
+        """
         raise NotImplementedError

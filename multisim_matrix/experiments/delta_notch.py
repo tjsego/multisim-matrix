@@ -101,16 +101,13 @@ def run_composites(core):
 
             # make the document
             document = {
-                # 'neighborhood_surface_areas_store': {
-                #     f'{n}': {
-                #         f'{m}': 0.0 for m in range(n_initial_cells) if m != n
-                #     } for n in range(n_initial_cells)
-                # },
                 'tissue': {
                     '_type': 'process',
                     'address': f'{multicell_address}',
                     'config': multicell_config_merged,
-                    'inputs': {},
+                    'inputs': {
+                        'divide_cells': ['divide_cells'],  # TODO -- we need to communicate division back to the tissue process
+                    },
                     'outputs': {
                         'neighborhood_surface_areas': ['neighborhood_surface_areas'],
                         'cell_spatial_data': ['cell_spatial_data']
@@ -123,14 +120,15 @@ def run_composites(core):
                     'address': 'local:CellConnector',
                     'config': {
                         'cells_count': num_cells_x * num_cells_y,
-                        'read_molecules': ['delta'],  # TODO -- this will tell the connector what molecule id to read
+                        'read_molecules': ['delta'],
                     },
                     'inputs': {
                         'connections': ['neighborhood_surface_areas'],  # this gives the connectivity and surface area
-                        'cells': ['cells']  # it sees the cells so it can read their delta values
+                        'cells': ['cells'],                              # it sees the cells so it can read their delta values
+                        'divide_cells': ['divide_cells']
                     },
                     'outputs': {
-                        'cells': ['cells']  # this updates the total delta values seen by each cell
+                        'cells': ['cells']                              # this updates the total delta values seen by each cell
                     }
                 },
                 'renderer': {
@@ -175,23 +173,24 @@ def run_composites(core):
                         },
                         'grow_divide_process': {
                             '_type': 'process',
-                            'address': 'local:gd_process',
-                            'config': {**grow_divide_config,
-                                       **{'cell_id': 1,
-                                          'cell_schema': {
-                                              'volume': 'cell_volume',
-                                              'notch': 'concentration',
-                                          }}
-                                       },
-                            'inputs': {
+                            'address': default('string', 'local:gd_process'),
+                            'config': default('quote',
+                                              {
+                                                  **grow_divide_config,
+                                                  **{'cell_id': 1,
+                                                     'cell_schema': {
+                                                         'volume': 'cell_volume',
+                                                         'notch': 'concentration',}}}),
+                            'inputs': default('tree[wires]', {
                                 'activator': ['notch'],
                                 'trigger': ['volume']
-                            },
-                            'outputs': {
+                            }),
+                            'outputs': default('tree[wires]', {
                                 'target': ['volume'],
-                                'environment': ['..', ]  # point IN the environment to the map of cells
-                            },
-                            'interval': 1.0
+                                'environment': ['..', ],                # point IN the environment to the map of cells
+                                'divide_cells': ['..', 'divide_cells']
+                            }),
+                            'interval': default('float', 1.0)
                         },
                     },
 

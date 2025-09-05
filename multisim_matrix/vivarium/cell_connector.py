@@ -33,14 +33,15 @@ class CellConnector(Step):
 
     def inputs(self):
         return {
-            "connections": "neighborhood_surface_areas",
-            "cells": "map[delta:float|notch:float]"
+            'connections': 'neighborhood_surface_areas',
+            'cells': 'map[delta:float|notch:float]',
+            'divide_cells': 'cell_generation'  # TODO -- handling cell division updates, clean the message queue/ stale data
         }
 
 
     def outputs(self):
         return {
-            "cells": "map[delta_neighbors:float|delta:float|notch:float]"
+            'cells': 'map[delta_neighbors:float|delta:float|notch:float]',
         }
 
 

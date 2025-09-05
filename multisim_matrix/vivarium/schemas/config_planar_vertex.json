@@ -6,14 +6,16 @@
   "service_name": "VertexPlanarSheet",
   "access_methods": {
     "inputs": {
-      "set_cell_area_targets": "set_cell_volume_targets"
+      "set_cell_area_targets": "set_cell_volume_targets",
+      "divide_cells": "divide_cells"
     },
     "outputs": {
       "cell_areas": "cell_volumes"
     }
   },
   "input_schema": {
-    "set_cell_area_targets": "cell_volumes"
+    "set_cell_area_targets": "cell_volumes",
+    "divide_cells": "cell_generation"
   },
   "output_schema": {
     "cell_areas": "cell_volumes"

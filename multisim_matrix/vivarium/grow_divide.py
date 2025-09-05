@@ -43,6 +43,7 @@ class GrowDivide(Process):
             'environment': {
                 '_type': 'map',
                 '_value': self.config['cell_schema']},  # we need somewhere to divide into
+            'divide_cells': 'cell_generation'
         }
 
     def update(self, state, interval):
@@ -51,25 +52,27 @@ class GrowDivide(Process):
         trigger_level = state['trigger']
 
         divide = {}
+        divide_cells = {}
         if trigger_level >= self.config['threshold']:
             # trigger division of self
             mother = self.config['cell_id']
             daughters = [(
-                f'{mother}_{i}', {
-                    'cell_id': f'{mother}_{i}'})
+                f'{mother}_{i}', {'cell_id': f'{mother}_{i}'})
                 for i in range(self.config['divisions'])]
             divide = {
                 '_react': {
                     'divide': {
                         'mother': mother,
                         'daughters': daughters}}}
+            divide_cells = {'_add': {mother: tuple(d[0] for d in daughters)}}
 
         # grow
         updated_target = self.config['growth_rate'] * activator_level * interval
 
         return {
             'target': updated_target,
-            'environment': divide
+            'environment': divide,
+            'divide_cells': divide_cells
         }
 
 import pprint

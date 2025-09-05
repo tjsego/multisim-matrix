@@ -1,5 +1,12 @@
 [
   [
+    "cell_generation",
+    {
+      "_type": "map",
+      "_value": "tuple[string,string]"
+    }
+  ],
+  [
     "concentration",
     {
       "_inherit": "float",

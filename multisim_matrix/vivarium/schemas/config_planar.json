@@ -5,13 +5,17 @@
     "cell_radius": "float"
   },
   "access_methods": {
-    "inputs": {},
+    "inputs": {
+      "divide_cells": "divide_cells"
+    },
     "outputs": {
       "cell_spatial_data": "cell_spatial_data",
       "neighborhood_surface_areas": "neighbor_surface_areas"
     }
   },
-  "input_schema": {},
+  "input_schema": {
+    "divide_cells": "cell_generation"
+  },
   "output_schema": {
     "cell_spatial_data": "cell_spatial_data",
     "neighborhood_surface_areas": "neighborhood_surface_areas"
