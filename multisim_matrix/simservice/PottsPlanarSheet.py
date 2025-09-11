@@ -1,6 +1,6 @@
 import numpy as np
 from multisim_matrix.simservice.PlanarSheetSimService import PlanarSheetSimService
-from typing import Dict, List
+from typing import Dict, Optional, Tuple
 
 
 from cc3d.core.simservice.CC3DSimService import CC3DSimService
@@ -68,12 +68,26 @@ class PottsPlanarSheet(CC3DSimService, PlanarSheetSimService):
         self.register_steppable(CompuCell.MitosisSteppable)
         self.mitosis_steppable = None
 
+        self._cell_id_map: Optional[Dict[str, int]] = None
+        self._cell_id_map_inv: Optional[Dict[int, str]] = None
+
     def run(self):
         super().run()
 
         from cc3d import CompuCellSetup
         steppable_registry = CompuCellSetup.persistent_globals.steppable_registry
         self.mitosis_steppable = steppable_registry.getSteppablesByClassName('MitosisSteppable')[0]
+
+    def start(self) -> bool:
+        result = super().start()
+
+        cinv = PottsPlanarSheet._get_cell_inventory()
+        if cinv is None:
+            return result
+        for cell in CellList(cinv):
+            self._process_new_cell(cell)
+
+        return result
 
     @staticmethod
     def _get_simulator():
@@ -153,7 +167,24 @@ class PottsPlanarSheet(CC3DSimService, PlanarSheetSimService):
         ])
         return result
 
-    def _neighbor_surface_areas(self, _cell_id: int) -> Dict[int, float]:
+    def _set_id_map(self, _cell, _external_id: str):
+        if self._cell_id_map is None:
+            self._cell_id_map = dict()
+        if self._cell_id_map_inv is None:
+            self._cell_id_map_inv = dict()
+
+        if _cell.id in self._cell_id_map_inv:
+            self._cell_id_map.pop(self._cell_id_map_inv[_cell.id])
+
+        self._cell_id_map[_external_id] = _cell.id
+        self._cell_id_map_inv[_cell.id] = _external_id
+
+    def _process_new_cell(self, _cell, new_id: str = None):
+        if new_id is None:
+            new_id = str(_cell.id - 1)
+        self._set_id_map(_cell, new_id)
+
+    def _neighbor_surface_areas(self, _cell) -> Dict[str, float]:
         cinv = PottsPlanarSheet._get_cell_inventory()
         result = {}
         if cinv is None:
@@ -163,22 +194,18 @@ class PottsPlanarSheet(CC3DSimService, PlanarSheetSimService):
         if neighbor_tracker_plugin is None:
             return result
 
-        cell = self._get_cell_by_id(_cell_id)
-        if cell is None:
-            return result
-
-        for nbs, csa in CellNeighborListFlex(neighbor_tracker_plugin, cell):
+        for nbs, csa in CellNeighborListFlex(neighbor_tracker_plugin, _cell):
             if nbs:
-                result[nbs.id - 1] = float(csa)
+                result[self._cell_id_map_inv[nbs.id]] = float(csa)
         return result
 
-    def neighbor_surface_areas(self) -> Dict[int, Dict[int, float]]:
+    def neighbor_surface_areas(self) -> Dict[str, Dict[str, float]]:
         result = {}
         cinv = PottsPlanarSheet._get_cell_inventory()
         if cinv is None:
             return result
         for cell in CellList(cinv):
-            result[cell.id - 1] = self._neighbor_surface_areas(cell.id)
+            result[self._cell_id_map_inv[cell.id]] = self._neighbor_surface_areas(cell)
         return result
 
     def num_cells(self) -> int:
@@ -187,29 +214,32 @@ class PottsPlanarSheet(CC3DSimService, PlanarSheetSimService):
             return 0
         return potts.getNumCells()
 
-    def cell_volumes(self) -> Dict[int, float]:
+    def cell_volumes(self) -> Dict[str, float]:
         result = {}
         cinv = PottsPlanarSheet._get_cell_inventory()
         if cinv is None:
             return result
         for cell in CellList(cinv):
-            result[cell.id - 1] = float(cell.volume)
+            result[self._cell_id_map_inv[cell.id]] = float(cell.volume)
         return result
 
-    def set_cell_volume_targets(self, _targets: Dict[int, float]) -> None:
+    def set_cell_volume_targets(self, _targets: Dict[str, float]) -> None:
         for cell_id, cell_volume in _targets.items():
-            cell = self._get_cell_by_id(cell_id + 1)
+            cell = self._get_cell_by_id(self._cell_id_map[cell_id])
             if cell is not None:
                 cell.targetVolume = cell_volume
 
-    def divide_cells(self, _ids: List[int]) -> Dict[int, int]:
+    def divide_cells(self, _ids: Dict[str, Tuple[str, str]]) -> Dict[str, str]:
         result = {}
-        for cell_id in _ids:
-            cell = self._get_cell_by_id(cell_id + 1)
+        for cell_id, (new_parent_id, child_id) in _ids.items():
+            cell = self._get_cell_by_id(self._cell_id_map[cell_id])
             if cell is None:
                 continue
             self.mitosis_steppable.doDirectionalMitosisRandomOrientation(cell)
-            result[cell.id - 1] = self.mitosis_steppable.childCell - 1
+            new_cell = self._get_cell_by_id(self.mitosis_steppable.childCell)
+            self._process_new_cell(new_cell, new_id=child_id)
+            self._set_id_map(cell, new_parent_id)
+            result[self._cell_id_map_inv[cell.id]] = self._cell_id_map_inv[new_cell.id]
         return result
 
 

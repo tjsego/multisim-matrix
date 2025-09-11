@@ -51,6 +51,9 @@ class CenterPlanarSheet(PlanarSheetSimService):
         self._show = show
         self._cell_type: Optional[tf.ParticleType] = None
 
+        self._cell_id_map: Optional[Dict[str, int]] = None
+        self._cell_id_map_inv: Optional[Dict[int, str]] = None
+
     @classmethod
     def init_arginfo(cls):
         return []
@@ -74,18 +77,34 @@ class CenterPlanarSheet(PlanarSheetSimService):
         ])
         return result
 
-    def _neighbor_surface_areas(self, _cell_id: int) -> Dict[str, float]:
-        if not self._cell_type or _cell_id >= len(tf.Universe.particles):
+    def _neighbor_surface_areas(self, _ph: tf.ParticleHandle) -> Dict[str, float]:
+        if not self._cell_type:
             return {}
-        ph = tf.ParticleHandle(_cell_id)
-        if not ph:
-            return {}
-        cell_diameter = ph.radius * 2
-        return {str(nh.id): neighbor_area(cell_diameter, ph.relativePosition(nh.position).length()) for nh in
-                ph.neighbors(distance=neighbor_cutoff_cd * cell_diameter - ph.radius)}
+        cell_diameter = _ph.radius * 2
+        return {self._cell_id_map_inv[nh.id]: neighbor_area(cell_diameter, _ph.relativePosition(nh.position).length())
+                for nh in _ph.neighbors(distance=neighbor_cutoff_cd * cell_diameter - _ph.radius)}
+
+    def _set_id_map(self, _cell, _external_id: str):
+        if self._cell_id_map is None:
+            self._cell_id_map = dict()
+        if self._cell_id_map_inv is None:
+            self._cell_id_map_inv = dict()
+
+        if _cell.id in self._cell_id_map_inv:
+            self._cell_id_map.pop(self._cell_id_map_inv[_cell.id])
+
+        self._cell_id_map[_external_id] = _cell.id
+        self._cell_id_map_inv[_cell.id] = _external_id
+
+    def _process_new_cell(self, _ph: tf.ParticleHandle, new_id: str = None):
+        if new_id is None:
+            new_id = str(_ph.id)
+        self._set_id_map(_ph, new_id)
+
+        return new_id
 
     def neighbor_surface_areas(self) -> Dict[str, Dict[int, float]]:
-        return {str(ph.id): self._neighbor_surface_areas(ph.id) for ph in tf.Universe.particles}
+        return {self._cell_id_map_inv[ph.id]: self._neighbor_surface_areas(ph) for ph in tf.Universe.particles}
 
     def num_cells(self) -> int:
         return len(tf.Universe.particles)
@@ -158,7 +177,7 @@ class CenterPlanarSheet(PlanarSheetSimService):
             for j in range(self.num_cells_y):
                 pos_x = pad + i * self.cell_radius * 2
                 pos_y = pad + (j * 2 + (i % 2)) * 2 * self.cell_radius / np.sqrt(3)
-                self._cell_type([pos_x, pos_y, tf.Universe.center[2]])
+                self._process_new_cell(self._cell_type([pos_x, pos_y, tf.Universe.center[2]]))
 
         if tf.err_occurred():
             print(tf.err_get_all())

@@ -45,7 +45,7 @@ class PlanarSheetSimService(PySimService, abc.ABC):
         ]
 
     @abc.abstractmethod
-    def neighbor_surface_areas(self) -> Dict[int, Dict[int, float]]:
+    def neighbor_surface_areas(self) -> Dict[str, Dict[str, float]]:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -56,13 +56,13 @@ class PlanarSheetSimService(PySimService, abc.ABC):
     def cell_spatial_data(self):
         raise NotImplementedError
 
-    def cell_volumes(self) -> Dict[int, float]:
+    def cell_volumes(self) -> Dict[str, float]:
         raise NotImplementedError
 
-    def set_cell_volume_targets(self, _targets: Dict[int, float]) -> None:
+    def set_cell_volume_targets(self, _targets: Dict[str, float]) -> None:
         raise NotImplementedError
 
-    def divide_cells(self, _ids: Dict[int,Tuple[int,int]]) -> Dict[int, int]:
+    def divide_cells(self, _ids: Dict[str, Tuple[str, str]]) -> Dict[str, str]:
         """
         input from mother: (daughter1_id, daughter2_id)
         """
