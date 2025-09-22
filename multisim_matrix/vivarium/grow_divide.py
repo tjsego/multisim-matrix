@@ -1,7 +1,7 @@
 from process_bigraph import ProcessTypes, Process, Composite, default
 from process_bigraph.emitter import emitter_from_wires, gather_emitter_results
 
-from multisim_matrix.vivarium import register_processes, register_types
+# from multisim_matrix.vivarium import register_processes, register_types
 
 # concentration = {
 #     '_inherit': 'float',
@@ -137,6 +137,8 @@ def run_process(core):
 
 
 if __name__ == '__main__':
+    from multisim_matrix.vivarium import register_processes, register_types
+
     core = ProcessTypes()
     register_types(core)
     register_processes(core)

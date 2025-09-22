@@ -16,6 +16,7 @@ from multisim_matrix.vivarium.RoadRunnerDeltaNotchProcess import RoadRunnerDelta
 from multisim_matrix.vivarium.VertexPlanarProcess import VertexPlanarProcess
 from multisim_matrix.vivarium.cell_connector import CellConnector
 from multisim_matrix.vivarium.MultiCellRenderer import MCCenterRenderer2D, MCPottsRenderer2D, MCVertexRenderer2D
+from multisim_matrix.vivarium.grow_divide import GrowDivide
 
 __processes__ = [
     CenterPlanarProcess,
@@ -26,7 +27,8 @@ __processes__ = [
     CellConnector,
     MCCenterRenderer2D,
     MCPottsRenderer2D,
-    MCVertexRenderer2D
+    MCVertexRenderer2D,
+    GrowDivide
 ]
 
 

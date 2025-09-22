@@ -171,9 +171,11 @@ def run_composites(core):
                                 'notch': ['notch']
                             })
                         },
+
+                        # TODO -- we need to only add this process if the multicellular process can support the divide_cells method
                         'grow_divide_process': {
                             '_type': 'process',
-                            'address': default('string', 'local:gd_process'),
+                            'address': default('string', 'local:GrowDivide'),
                             'config': default('quote',
                                               {
                                                   **grow_divide_config,
