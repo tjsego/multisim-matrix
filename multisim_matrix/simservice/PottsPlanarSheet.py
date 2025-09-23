@@ -129,13 +129,15 @@ class PottsPlanarSheet(CC3DSimService, PlanarSheetSimService):
     def cell_spatial_data(self):
         cell_field = self._get_cell_field()
         dim = cell_field.getDim()
-        x = np.zeros((dim.x, dim.y), dtype=int)
+        cell_i, cell_j, cell_ids = [], [], []
         for i in range(dim.x):
             for j in range(dim.y):
                 cell = cell_field[i, j, 0]
                 if cell is not None:
-                    x[i, j] = cell.id
-        return x, dim.x, dim.y
+                    cell_i.append(i)
+                    cell_j.append(j)
+                    cell_ids.append(self._cell_id_map_inv[cell.id])
+        return cell_i, cell_j, cell_ids, dim.x, dim.y
 
     # PlanarSheetSimService interface
 

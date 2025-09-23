@@ -43,7 +43,7 @@ def run_composites(core):
     assert step_size >= dt, 'The time step of the process bigraph engine must be greater than or equal to the time step of tissue forge'
 
     multicellular_startup_settings = {
-        # 'local:PottsPlanarProcess': {},
+        'local:PottsPlanarProcess': {},
         'local:CenterPlanarProcess': {
             'step_size': step_size,
             'dt': dt,

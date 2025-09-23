@@ -85,8 +85,8 @@ class _MCRenderer2D(Step):
         states_delta = {}
         states_notch = {}
         for k, v in cells.items():
-            states_delta[int(k)] = v['delta']
-            states_notch[int(k)] = v['notch']
+            states_delta[k] = v['delta']
+            states_notch[k] = v['notch']
 
         self.save_figure(self.render_state(cell_spatial_data, states_delta), SUBDIR_DELTA)
         self.save_figure(self.render_state(cell_spatial_data, states_notch), SUBDIR_NOTCH)
@@ -176,39 +176,50 @@ class MCPottsRenderer2D(_MCRenderer2D):
         ax.set_aspect(float(dim_y) / dim_x)
         return fig
 
-    def render_cells(self, cell_data) -> plt.Figure:
-        x, dim_x, dim_y = cell_data
+    @staticmethod
+    def _map_cell_ids(cell_data):
+        cell_i, cell_j, cell_ids, dim_x, dim_y = cell_data
+        x = np.zeros((dim_x, dim_y), dtype=int)
+        id_map = {}
+        for i, j, cid in zip(cell_i, cell_j, cell_ids):
+            try:
+                nid = id_map[cid]
+            except KeyError:
+                nid = len(id_map) + 1
+                id_map[cid] = nid
+            x[i, j] = nid
+        return x
 
-        rendered_x = np.zeros((x.shape[0], x.shape[1], 3), dtype=float)
+    def render_cells(self, cell_data) -> plt.Figure:
+        cell_i, cell_j, cell_ids, dim_x, dim_y = cell_data
+
+        x = self._map_cell_ids(cell_data)
+        rendered_x = np.zeros((dim_x, dim_y, 3), dtype=float)
         rendered_x[x > 0] = [1.0, 0.0, 0.0]
 
         return self._render_cells(x, dim_x, dim_y, rendered_x)
 
     def render_state(self, cell_data, states) -> plt.Figure:
-        x, dim_x, dim_y = cell_data
+        cell_i, cell_j, cell_ids, dim_x, dim_y = cell_data
 
-        rendered_x = np.ones((x.shape[0], x.shape[1], 3), dtype=float) * 0.5
+        x = self._map_cell_ids(cell_data)
+        rendered_x = np.ones((dim_x, dim_y, 3), dtype=float) * 0.5
 
-        for i in range(x.shape[0]):
-            for j in range(x.shape[1]):
-                cell_id = x[i, j]
-                if cell_id > 0:
-                    rendered_x[i, j, :] = [min(1.0, states[cell_id - 1]) / 2 + 0.5, 0.5, 0.5]
+        for i, j, cell_id in zip(cell_i, cell_j, cell_ids):
+            rendered_x[i, j, :] = [min(1.0, max(0.0, states[cell_id])) / 2 + 0.5, 0.5, 0.5]
 
         return self._render_cells(x, dim_x, dim_y, rendered_x)
 
     def render_2state(self, cell_data, states1, states2) -> plt.Figure:
-        x, dim_x, dim_y = cell_data
+        cell_i, cell_j, cell_ids, dim_x, dim_y = cell_data
 
-        rendered_x = np.ones((x.shape[0], x.shape[1], 3), dtype=float) * 0.5
+        x = self._map_cell_ids(cell_data)
+        rendered_x = np.ones((dim_x, dim_y, 3), dtype=float) * 0.5
 
-        for i in range(x.shape[0]):
-            for j in range(x.shape[1]):
-                cell_id = x[i, j]
-                if cell_id > 0:
-                    rendered_x[i, j, :] = [min(1.0, states1[cell_id - 1]) / 2 + 0.5,
-                                           min(1.0, states2[cell_id - 1]) / 2 + 0.5,
-                                           0.5]
+        for i, j, cell_id in zip(cell_i, cell_j, cell_ids):
+            rendered_x[i, j, :] = [min(1.0, max(0.0, states1[cell_id])) / 2 + 0.5,
+                                   min(1.0, max(0.0, states2[cell_id])) / 2 + 0.5,
+                                   0.5]
 
         return self._render_cells(x, dim_x, dim_y, rendered_x)
 
@@ -245,12 +256,12 @@ class MCVertexRenderer2D(_MCRenderer2D):
 
     def render_state(self, cell_data, states) -> plt.Figure:
         points, dim_x, dim_y, cell_ids = cell_data
-        face_colors = [[min(1.0, states[cid]) / 2 + 0.5, 0.5, 0.5] for cid in cell_ids]
+        face_colors = [[min(1.0, max(0.0, states[cid])) / 2 + 0.5, 0.5, 0.5] for cid in cell_ids]
         return self._render_cells(points, dim_x, dim_y, face_colors)
 
     def render_2state(self, cell_data, states1, states2) -> plt.Figure:
         points, dim_x, dim_y, cell_ids = cell_data
-        face_colors = [[min(1.0, states1[cid]) / 2 + 0.5,
-                        min(1.0, states2[cid]) / 2 + 0.5,
+        face_colors = [[min(1.0, max(0.0, states1[cid])) / 2 + 0.5,
+                        min(1.0, max(0.0, states2[cid])) / 2 + 0.5,
                         0.5] for cid in cell_ids]
         return self._render_cells(points, dim_x, dim_y, face_colors)

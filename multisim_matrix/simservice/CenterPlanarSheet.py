@@ -117,7 +117,7 @@ class CenterPlanarSheet(PlanarSheetSimService):
             p_pos_x, p_pos_y = ph.position.xy().as_list()
             pos_x.append(p_pos_x)
             pos_y.append(p_pos_y)
-            cell_ids.append(ph.id)
+            cell_ids.append(self._cell_id_map_inv[ph.id])
         return pos_x, pos_y, cell_ids, *tf.Universe.dim.xy().as_list(), self._cell_type.radius
 
     # PySimService interface
