@@ -6,6 +6,7 @@ from typing import Dict, Optional, Tuple
 from cc3d.core.simservice.CC3DSimService import CC3DSimService
 from cc3d.core import PyCoreSpecs as pcs
 from cc3d.core.iterators import CellList, CellNeighborListFlex
+from cc3d.core.PySteppables import MitosisSteppableBase
 
 
 def core_specs(num_cells_x: int,
@@ -64,21 +65,17 @@ class PottsPlanarSheet(CC3DSimService, PlanarSheetSimService):
 
         self.register_specs(core_specs(num_cells_x, num_cells_y, cell_radius))
 
-        from cc3d.cpp import CompuCell
-        self.register_steppable(CompuCell.MitosisSteppable)
+        self.register_steppable(MitosisSteppableBase)
         self.mitosis_steppable = None
 
         self._cell_id_map: Optional[Dict[str, int]] = None
         self._cell_id_map_inv: Optional[Dict[int, str]] = None
 
-    def run(self):
-        super().run()
-
+    def start(self) -> bool:
         from cc3d import CompuCellSetup
         steppable_registry = CompuCellSetup.persistent_globals.steppable_registry
-        self.mitosis_steppable = steppable_registry.getSteppablesByClassName('MitosisSteppable')[0]
+        self.mitosis_steppable = steppable_registry.getSteppablesByClassName('MitosisSteppableBase')[0]
 
-    def start(self) -> bool:
         result = super().start()
 
         cinv = PottsPlanarSheet._get_cell_inventory()
@@ -235,8 +232,8 @@ class PottsPlanarSheet(CC3DSimService, PlanarSheetSimService):
             cell = self._get_cell_by_id(self._cell_id_map[cell_id])
             if cell is None:
                 continue
-            self.mitosis_steppable.doDirectionalMitosisRandomOrientation(cell)
-            new_cell = self._get_cell_by_id(self.mitosis_steppable.childCell)
+            self.mitosis_steppable.divide_cell_random_orientation(cell)
+            new_cell = self._get_cell_by_id(self.mitosis_steppable.child_cell)
             self._process_new_cell(new_cell, new_id=child_id)
             self._set_id_map(cell, new_parent_id)
             result[self._cell_id_map_inv[cell.id]] = self._cell_id_map_inv[new_cell.id]
