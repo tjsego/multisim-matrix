@@ -6,6 +6,7 @@ TODO -- need to pass in ids for the cells so that we can synchronize.
 from process_bigraph import ProcessTypes, Composite, default, gather_emitter_results
 from process_bigraph.emitter import emitter_from_wires
 from bigraph_schema.registry import deep_merge_copy
+from bigraph_viz import plot_bigraph
 
 from multisim_matrix import register_processes, register_types
 import os
@@ -101,6 +102,7 @@ def run_composites(core):
 
             # make the document
             document = {
+                'divide_cells': {},  # this will be populated by the grow_divide tuple
                 'tissue': {
                     '_type': 'process',
                     'address': f'{multicell_address}',
@@ -190,7 +192,7 @@ def run_composites(core):
                             'outputs': default('tree[wires]', {
                                 'target': ['volume'],
                                 'environment': ['..', ],                # point IN the environment to the map of cells
-                                'divide_cells': ['..', 'divide_cells']
+                                'divide_cells': ['divide_cells']
                             }),
                             'interval': default('float', 1.0)
                         },
@@ -200,8 +202,7 @@ def run_composites(core):
             }
 
             # TODO -- set initial state
-
-            # import ipdb; ipdb.set_trace()
+            plot_bigraph(document, composition, filename=f'delta_notch_before')
 
             # make the composite
             print(f'Building composite with {multicell_address} and {subcell_address}')
@@ -212,6 +213,8 @@ def run_composites(core):
                 core=core
             )
 
+            plot_bigraph(sim.state, sim.composition, filename=f'delta_notch_after')
+
             # run the simulation
             print(f'Running composite with {multicell_address} and {subcell_address}')
             sim.run(interval=interval)
@@ -219,7 +222,6 @@ def run_composites(core):
             # retrieve the results
             results = gather_emitter_results(sim)
 
-            import ipdb; ipdb.set_trace()
 
             # print the results
             # TODO -- is the emitter not wired to the right location
